@@ -288,6 +288,7 @@ h3 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
   background: var(--ink-1);
 }
 .hero-photo image-slot { width: 100%; height: 100%; }
+.hero-photo img { width: 100%; height: 100%; object-fit: cover; }
 .hero-caption {
   display: flex; justify-content: space-between; align-items: center;
   font-family: var(--font-mono);
@@ -417,6 +418,7 @@ section.block {
   position: relative;
 }
 .about-photo image-slot { width: 100%; height: 100%; }
+.about-photo img { width: 100%; height: 100%; object-fit: cover; }
 .about-photo::after {
   content: '';
   position: absolute; inset: 0;
@@ -479,6 +481,7 @@ section.block {
   position: relative;
 }
 .gallery-slot image-slot { width: 100%; height: 100%; }
+.gallery-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .gallery-slot + .gallery-slot { border-left: 1px solid var(--ink-3); }
 .gallery-label {
   position: absolute;
@@ -790,7 +793,24 @@ section.block {
 }
 
 /* ============================================================
-   Tweaks panel
+   Photo placeholder
+   ============================================================ */
+.photo-placeholder {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px;
+  background: var(--ink-2);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.photo-placeholder svg { opacity: .4; }
+
+/* ============================================================
+   Tweaks panel (removed from public build — styles kept for reference)
    ============================================================ */
 .tweaks {
   position: fixed;
