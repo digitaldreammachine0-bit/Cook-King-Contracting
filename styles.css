@@ -683,13 +683,13 @@ section.block {
   border: 1px solid var(--ink-3);
   border-radius: var(--radius);
   padding: 18px;
-  min-height: 520px;
+  min-height: 760px;
   position: relative;
 }
 .calendly-inline-widget {
-  min-height: 480px;
+  min-height: 720px;
+  width: 100%;
   border-radius: 8px;
-  overflow: hidden;
 }
 .calendly-fallback {
   position: absolute;

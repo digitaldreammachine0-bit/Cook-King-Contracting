@@ -57,7 +57,7 @@
   // go still — better to reject than surprise.
   const ACCEPT = ['image/png', 'image/jpeg', 'image/webp', 'image/avif'];
 
-  // ── Shared sidecar store ────────────────────────────────────────────────
+  // ── Shared sidecar store ──────────────────────────────────────────────
   // One fetch + immediate write-on-change for every <image-slot> on the
   // page. Reads via fetch() so viewing works anywhere the HTML and sidecar
   // are served together; writes go through window.omelette.writeFile, which
@@ -136,7 +136,7 @@
     if (loaded) save(); else load().then(save);
   }
 
-  // ── Image downscale ─────────────────────────────────────────────────────
+  // ── Image downscale ───────────────────────────────────────────────────
   // Encode through a canvas so the sidecar carries resized bytes, not the
   // raw upload. Longest side is capped at 2× the slot's rendered width
   // (retina) and at MAX_DIM. WebP keeps alpha and is ~10× smaller than PNG
@@ -157,7 +157,7 @@
     }
   }
 
-  // ── Custom element ──────────────────────────────────────────────────────
+  // ── Custom element ────────────────────────────────────────────────────
   const stylesheet =
     ':host{display:inline-block;position:relative;vertical-align:top;' +
     '  font:13px/1.3 system-ui,-apple-system,sans-serif;color:rgba(0,0,0,.55);width:240px;height:160px}' +
