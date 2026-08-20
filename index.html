@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  Cook King Contractor - three.js build.
+  This page uses ES modules. Browsers refuse to load ES modules from a file:// path,
+  so double-clicking this file shows the non-3D fallback page. That is expected.
+  Serve it over http (local server or any web host) to see the 3D.
+
+  quote.js is deliberately NOT a module, so the quote form still works from file://.
+-->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cook King Contractor | Moves, Repairs &amp; Cleaning</title>
+  <meta name="description" content="Cook King Contractor: professional moves, repairs, and cleaning services in Tempe and the East Valley. Call (480) 414-6504.">
+  <meta name="theme-color" content="#000000">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-photo fallback"></div>
+    <div class="hero-overlay fallback"></div>
+    <div id="hero-3d" class="stage stage-hero" aria-hidden="true"></div>
+    <div class="hero-content">
+      <h1 class="hero-mark">
+        <span class="logo-crop">
+          <img src="logo.png" alt="Cook King Contractor" class="logo">
+        </span>
+      </h1>
+      <button type="button" class="btn-quote" id="quote-open" aria-haspopup="dialog">GET QUOTE</button>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-left">
+      <a href="tel:+14804146504" class="footer-phone">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24 11.36 11.36 0 003.58.57 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1 11.36 11.36 0 00.57 3.58 1 1 0 01-.25 1.01l-2.2 2.2z"/></svg>
+        480-414-6504
+      </a>
+      <a href="mailto:russrestores24.7@gmail.com" class="footer-email">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        russrestores24.7@gmail.com
+      </a>
+    </div>
+    <div class="footer-right">
+      <div class="footer-social">
+        <a href="#" aria-label="Cook King Contractor on Facebook">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="11"/><path d="M13 19v-6h2l.4-2.6H13V8.7c0-.75.2-1.26 1.28-1.26H15.5V5.1A18 18 0 0013.5 5c-1.97 0-3.32 1.2-3.32 3.42v1.98H8v2.6h2.18V19z" fill="#000000"/></svg>
+        </a>
+        <a href="https://www.instagram.com/cleanercook24.7" target="_blank" rel="noopener noreferrer" aria-label="Cook King Contractor on Instagram">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="11"/><g fill="none" stroke="#000000" stroke-width="1.7"><rect x="6.6" y="6.6" width="10.8" height="10.8" rx="3.4"/><circle cx="12" cy="12" r="2.9"/></g><circle cx="15.9" cy="8.1" r="1.05" fill="#000000"/></svg>
+        </a>
+      </div>
+      <p class="footer-handle">@cleanercook24.7</p>
+    </div>
+  </footer>
+
+  <!-- FOOTER BOTTOM BAR -->
+  <div class="footer-bottom">
+    <p class="footer-copy">&copy; 2026 Cook King Contractor. All rights reserved.</p>
+  </div>
+
+  <!-- ===================== QUOTE POPUP ===================== -->
+  <div class="quote-backdrop" id="quote-backdrop" hidden>
+    <div class="quote-panel" role="dialog" aria-modal="true" aria-labelledby="quote-title" id="quote-panel">
+
+      <!-- Pinned to the top of the panel on every screen, so anyone who would
+           rather talk can bail out and dial at any point. -->
+      <div class="quote-head">
+        <a href="tel:+14804146504" class="quote-call">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24 11.36 11.36 0 003.58.57 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1 11.36 11.36 0 00.57 3.58 1 1 0 01-.25 1.01l-2.2 2.2z"/></svg>
+          <span class="quote-call-text">
+            <span class="quote-call-lead">Rather just talk?</span>
+            <span class="quote-call-num">480-414-6504</span>
+          </span>
+        </a>
+        <button type="button" class="quote-x" id="quote-close" aria-label="Close the quote form">
+          <span aria-hidden="true">&#215;</span>
+        </button>
+      </div>
+
+      <div class="quote-body" id="quote-body">
+        <h2 class="quote-title" id="quote-title">Get a quote</h2>
+        <p class="quote-step" id="quote-step" role="status">Step 1 of 3</p>
+
+        <!-- ---------- SCREEN 1: the job ---------- -->
+        <div class="quote-screen" id="quote-screen-1">
+
+          <fieldset class="field" aria-describedby="err-service">
+            <legend class="label">What do you need?</legend>
+            <div class="choice-grid">
+              <input type="radio" name="service" id="svc-moves" value="Moves" class="vis-hidden">
+              <label class="choice" for="svc-moves">Moves</label>
+              <input type="radio" name="service" id="svc-repairs" value="Repairs" class="vis-hidden">
+              <label class="choice" for="svc-repairs">Repairs</label>
+              <input type="radio" name="service" id="svc-cleaning" value="Cleaning" class="vis-hidden">
+              <label class="choice" for="svc-cleaning">Cleaning</label>
+            </div>
+            <p class="err" id="err-service" hidden></p>
+          </fieldset>
+
+          <div class="field">
+            <label class="label" for="q-date">What day do you need it?</label>
+            <input type="date" id="q-date" class="input" aria-describedby="err-date">
+            <p class="err" id="err-date" hidden></p>
+          </div>
+
+          <fieldset class="field" aria-describedby="err-time">
+            <legend class="label">What time works?</legend>
+            <div class="time-row">
+              <select id="q-hour" class="input select" aria-label="Hour">
+                <option value="">Hour</option>
+              </select>
+              <span class="time-colon" aria-hidden="true">:</span>
+              <select id="q-minute" class="input select" aria-label="Minutes">
+                <option value="00">00</option>
+                <option value="15">15</option>
+                <option value="30">30</option>
+                <option value="45">45</option>
+              </select>
+              <select id="q-meridiem" class="input select" aria-label="AM or PM">
+                <option value="">AM/PM</option>
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
+            </div>
+            <p class="err" id="err-time" hidden></p>
+          </fieldset>
+
+          <div class="field">
+            <label class="label" for="q-note">Anything else about the job? <span class="opt">Optional</span></label>
+            <textarea id="q-note" class="input textarea" rows="3"></textarea>
+          </div>
+
+        </div>
+
+        <!-- ---------- SCREEN 2: the customer ---------- -->
+        <div class="quote-screen" id="quote-screen-2" hidden>
+
+          <div class="field">
+            <label class="label" for="q-name">Your name</label>
+            <input type="text" id="q-name" class="input" autocomplete="name" aria-describedby="err-name">
+            <p class="err" id="err-name" hidden></p>
+          </div>
+
+          <div class="field">
+            <label class="label" for="q-phone">Your phone number</label>
+            <input type="tel" id="q-phone" class="input" autocomplete="tel" inputmode="tel" aria-describedby="err-phone">
+            <p class="err" id="err-phone" hidden></p>
+          </div>
+
+          <div class="field">
+            <label class="label" for="q-address">Address or area</label>
+            <input type="text" id="q-address" class="input" autocomplete="street-address" aria-describedby="err-address">
+            <p class="err" id="err-address" hidden></p>
+          </div>
+
+          <div class="field">
+            <label class="label" for="q-email">Your email <span class="opt">Optional</span></label>
+            <input type="email" id="q-email" class="input" autocomplete="email" inputmode="email" aria-describedby="err-email">
+            <p class="err" id="err-email" hidden></p>
+          </div>
+
+          <div class="field">
+            <span class="label" id="photo-label">Photos of the job <span class="opt">Optional</span></span>
+            <!-- The limit is stated before they pick, not after. -->
+            <p class="hint" id="photo-hint">Up to 4 photos. Big pictures are shrunk on your phone before they are sent, so this works on a slow connection.</p>
+            <input type="file" id="q-photos" class="vis-hidden" accept="image/*" multiple aria-describedby="photo-hint err-photos">
+            <label class="btn-file" for="q-photos">Choose photos</label>
+            <ul class="photo-list" id="photo-list"></ul>
+            <p class="err" id="err-photos" hidden></p>
+          </div>
+
+          <div class="field">
+            <div class="check-row">
+              <input type="checkbox" id="q-copy" class="vis-hidden">
+              <label class="check" for="q-copy">
+                <span class="check-box" aria-hidden="true"></span>
+                <span class="check-text">
+                  Send me a copy
+                  <span class="check-note">Your email address is needed for this.</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ---------- SCREEN 3: review and send ---------- -->
+        <div class="quote-screen" id="quote-screen-3" hidden>
+          <p class="quote-lead">Check this over, then send it.</p>
+
+          <dl class="review" id="quote-review"></dl>
+
+          <p class="quote-handoff" id="quote-handoff">
+            This goes straight to Russell. He calls you back to confirm the price.
+          </p>
+        </div>
+
+        <!-- ---------- SCREEN 4: sent ---------- -->
+        <div class="quote-screen" id="quote-screen-4" hidden>
+          <p class="quote-lead">Sent. Russell has your request.</p>
+          <p class="quote-handoff" id="quote-sent-note">He will call you back to confirm the price and the time.</p>
+        </div>
+
+        <p class="send-error" id="quote-send-error" role="alert" hidden></p>
+
+        <!-- Sits under the error text on purpose: the customer reads why it
+             failed, then the way to reach Russell instead. -->
+        <div class="quote-fallback" id="quote-fallback" hidden>
+          <p class="quote-fallback-title">Reach Russell directly instead.</p>
+          <a class="quote-fallback-line" href="tel:+14804146504">480-414-6504</a>
+          <a class="quote-fallback-line" href="mailto:russrestores24.7@gmail.com">russrestores24.7@gmail.com</a>
+        </div>
+      </div>
+
+      <div class="quote-foot" id="quote-foot">
+        <button type="button" class="btn-ghost" id="quote-back" hidden>Back</button>
+        <button type="button" class="btn-solid" id="quote-next">Next</button>
+        <button type="button" class="btn-solid" id="quote-send" hidden>Send my request</button>
+        <button type="button" class="btn-solid" id="quote-done" hidden>Close</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module" src="scene.js"></script>
+  <script defer src="quote.js"></script>
+</body>
+</html>

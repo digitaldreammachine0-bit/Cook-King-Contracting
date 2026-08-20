@@ -1,0 +1,736 @@
+/* ===================== BASE ===================== */
+:root {
+  --bg:         #000000;
+  --bg-bottom:  #0a0a0a;
+  --rule:       rgba(255,255,255,0.10);
+  --text:       #ffffff;
+  --text-dim:   rgba(255,255,255,0.68);
+  --blue-lift:  #4a90e2;
+  --blue-btn:   #2166b8;
+  --focus:      #ffd34d;
+
+  /* One radius for every panel, input, and card on the page.
+     Buttons are the only exception: they are full pills. */
+  --radius:     14px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; background: var(--bg); }
+
+body {
+  position: relative;
+  font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+img { display: block; max-width: 100%; }
+
+/* Several popup elements are display:flex or display:grid, which would beat
+   the hidden attribute. This keeps hidden meaning hidden. */
+[hidden] { display: none !important; }
+
+/* ===================== 3D LAYERING CONTRACT ===================== */
+/*
+  The canvas sits ON TOP of the page and is transparent. The renderer only ever
+  paints inside the three scissor rectangles, so every other pixel stays clear and
+  the page shows through untouched. Text and buttons are lifted above the canvas
+  so 3D objects pass BEHIND them.
+*/
+#bg-canvas {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 5;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.webgl-on #bg-canvas { display: block; }
+
+/* Placeholder divs reserve space and define each scissor rectangle. */
+.stage { display: none; }
+.webgl-on .stage { display: block; }
+
+/* Fallback content is the DEFAULT. Hidden only once 3D is proven alive. */
+.webgl-on .fallback { display: none !important; }
+
+/* Anything that must stay readable over 3D. */
+.hero-content { position: relative; z-index: 6; }
+
+/* ===================== HERO ===================== */
+.hero {
+  position: relative;
+  /* The hero IS the page now, so it fills the screen. dvh, not vh: on a phone
+     vh stays fixed at the tallest the viewport ever gets, so when the address
+     bar slides away the layout jumps. dvh follows the viewport as it really is.
+     The plain vh line above is the fallback for older browsers. */
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--bg);
+  border-bottom: 1px solid var(--rule);
+}
+
+/* Fallback path: the original v3 hero photo. */
+.hero-photo {
+  position: absolute;
+  inset: 0;
+  background-image: url('Images/image.png_202608121224.jpeg');
+  background-size: cover;
+  background-position: center;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.38) 50%, rgba(0,0,0,0.55) 100%);
+}
+
+.stage-hero { position: absolute; inset: 0; }
+
+.hero-content {
+  width: 100%;
+  padding: 30px 16px 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+}
+
+/* The logo IS the h1. The page keeps a top-level heading and the alt text
+   carries the business name. */
+.hero-mark { line-height: 0; font-weight: 400; }
+
+/* CSS crop.
+
+   The artwork is 1104 x 975. The bottom line of it is the word CONTRACTOR,
+   drawn in near-black with a thin white outline, which vanishes on a black
+   page. So it gets cut off.
+
+   Measured from the actual pixels, not guessed:
+     rows 744-860  COOK KING wordmark (bright)
+     rows 861-881  empty gap
+     rows 882-943  CONTRACTOR (luminance ~1-3, i.e. black)
+
+   871 is the middle of that gap. 11px of clearance on both sides.
+
+   The wrapper's aspect-ratio IS the crop: it is shorter than the image, and
+   overflow clips the rest. Nothing is stretched. To move the crop line,
+   change 871 and nothing else. Larger keeps more. */
+.logo-crop {
+  display: block;
+  width: clamp(200px, 52vw, 320px);
+  aspect-ratio: 1104 / 871;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.logo {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.btn-quote {
+  display: inline-block;
+  padding: 13px 36px;
+  border: none;
+  background: var(--blue-btn);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 1.06rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-decoration: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 6px 22px rgba(33,102,184,0.45);
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.btn-quote:hover  { background: #2f7ad4; }
+.btn-quote:active { transform: scale(0.97); }
+
+/* ===================== FOOTER ===================== */
+.footer {
+  position: relative;
+  z-index: 6;
+  background: var(--bg);
+  padding: 18px 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.footer-phone,
+.footer-email {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text);
+  text-decoration: none;
+  min-width: 0;
+}
+
+.footer-phone { font-size: 1.22rem; font-weight: 700; }
+
+.footer-email {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--text-dim);
+  word-break: break-all;
+}
+
+.footer-phone svg { width: 21px; height: 21px; flex-shrink: 0; color: var(--blue-lift); }
+.footer-email svg { width: 17px; height: 17px; flex-shrink: 0; color: var(--blue-lift); }
+
+.footer-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.footer-social { display: flex; gap: 10px; }
+.footer-social a { color: var(--text); display: flex; }
+.footer-social svg { width: 25px; height: 25px; }
+
+.footer-handle {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.footer-bottom {
+  position: relative;
+  z-index: 6;
+  background: var(--bg-bottom);
+  padding: 9px 18px 11px;
+  text-align: center;
+  border-top: 1px solid var(--rule);
+}
+
+.footer-copy {
+  color: rgba(255,255,255,0.42);
+  font-size: 0.66rem;
+  line-height: 1.5;
+}
+
+.footer a { position: relative; }
+
+.footer a::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  min-width: 44px;
+  height: 44px;
+}
+
+/* ===================== QUOTE POPUP ===================== */
+.quote-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0,0,0,0.82);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: quote-fade 0.18s ease both;
+}
+
+@keyframes quote-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.quote-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 470px;
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  background: var(--bg-bottom);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.9);
+  overflow: hidden;
+  animation: quote-rise 0.22s ease both;
+}
+
+@keyframes quote-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---- pinned header: the phone number stays visible on every screen ---- */
+.quote-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 12px 12px 16px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--bg);
+}
+
+.quote-call {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--text);
+  text-decoration: none;
+  padding: 4px 6px 4px 0;
+}
+
+.quote-call svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--blue-lift); }
+
+.quote-call-text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.quote-call-lead { font-size: 0.7rem; font-weight: 500; color: var(--text-dim); }
+.quote-call-num  { font-size: 1.06rem; font-weight: 700; }
+
+.quote-x {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.6rem;
+  line-height: 1;
+  font-family: inherit;
+  border-radius: 999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.quote-x:hover { background: rgba(255,255,255,0.10); }
+
+/* ---- scrolling body ---- */
+.quote-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 20px 16px 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.quote-title {
+  font-size: 1.32rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+
+.quote-step {
+  margin-top: 4px;
+  margin-bottom: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.quote-lead {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.quote-handoff {
+  margin-top: 16px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
+/* ---- fields ---- */
+.field {
+  border: none;
+  margin-bottom: 20px;
+}
+
+/* Labels always sit above their input. Never a placeholder standing in. */
+.label {
+  display: block;
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.opt {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--text-dim);
+}
+
+.hint {
+  margin-top: -2px;
+  margin-bottom: 10px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.input {
+  display: block;
+  width: 100%;
+  padding: 12px 13px;
+  background: #141414;
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.input::placeholder { color: var(--text-dim); }
+
+.textarea { resize: vertical; min-height: 76px; line-height: 1.45; }
+
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 10px;
+  cursor: pointer;
+}
+
+/* Native pickers paint their own glyphs dark by default on a dark field. */
+.input::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.75; cursor: pointer; }
+
+.time-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Trimmed padding buys the content box the width "AM/PM" needs. Measured:
+   the text is 60px, the box gives 74px. At the old padding it was 69px and
+   the label clipped to "AM or PI". */
+.time-row .select { flex: 1 1 auto; min-width: 0; padding-left: 10px; padding-right: 8px; }
+.time-row #q-meridiem { flex: 1.4 1 auto; }
+.time-colon { font-weight: 700; color: var(--text-dim); }
+
+/* ---- error state ----
+   Errors are carried by words and by a brightened border, not by a second
+   colour. The page keeps one accent, and colour is never the only signal. */
+.err {
+  margin-top: 7px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.input[aria-invalid="true"] { border-color: #ffffff; border-width: 2px; }
+.field.is-bad .choice, .field.is-bad .btn-file { border-color: rgba(255,255,255,0.85); }
+
+.send-error {
+  margin: 4px 0 12px;
+  padding: 12px 13px;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: var(--radius);
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--text);
+  background: rgba(255,255,255,0.05);
+}
+
+/* ---- service choice cards ---- */
+.choice-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+.vis-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  padding: 10px 6px;
+  background: #141414;
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.choice:hover { border-color: rgba(255,255,255,0.45); }
+
+input:checked + .choice {
+  border-color: var(--blue-lift);
+  background: rgba(74,144,226,0.18);
+  font-weight: 700;
+}
+
+/* ---- checkbox ---- */
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 13px;
+  background: #141414;
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.check-box {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border: 2px solid rgba(255,255,255,0.5);
+  border-radius: 6px;
+  position: relative;
+}
+
+input:checked + .check .check-box {
+  background: var(--blue-btn);
+  border-color: var(--blue-lift);
+}
+
+/* Tick mark, drawn with borders. No new SVG. */
+input:checked + .check .check-box::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 1px;
+  width: 5px;
+  height: 11px;
+  border: solid #ffffff;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+
+.check-text { font-size: 0.92rem; font-weight: 600; color: var(--text); line-height: 1.35; }
+.check-note { display: block; margin-top: 3px; font-size: 0.75rem; font-weight: 500; color: var(--text-dim); }
+
+/* ---- photos ---- */
+.btn-file {
+  display: inline-block;
+  padding: 11px 22px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.btn-file:hover { border-color: #ffffff; background: rgba(255,255,255,0.07); }
+
+.photo-list { list-style: none; margin-top: 12px; display: grid; gap: 8px; }
+
+.photo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px 9px 12px;
+  background: #141414;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+
+.photo-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.photo-size { flex: 0 0 auto; font-size: 0.72rem; font-weight: 500; color: var(--text-dim); }
+
+.photo-drop {
+  flex: 0 0 auto;
+  min-width: 44px;
+  height: 34px;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.photo-drop:hover { border-color: #ffffff; background: rgba(255,255,255,0.07); }
+
+/* ---- review list ---- */
+.review { display: grid; gap: 2px; }
+
+.review-row {
+  display: grid;
+  grid-template-columns: 116px 1fr;
+  gap: 10px;
+  padding: 11px 13px;
+  background: #141414;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+
+.review-row dt { font-size: 0.76rem; font-weight: 700; color: var(--text-dim); align-self: start; }
+.review-row dd { font-size: 0.9rem; font-weight: 600; color: var(--text); line-height: 1.4; overflow-wrap: anywhere; }
+
+/* ---- fallback contact block ---- */
+.quote-fallback {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: var(--radius);
+}
+
+.quote-fallback-title { font-size: 0.86rem; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+
+.quote-fallback-line {
+  display: block;
+  padding: 7px 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.quote-fallback-line:hover { text-decoration: underline; }
+
+/* ---- pinned footer buttons ---- */
+.quote-foot {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 10px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--rule);
+  background: var(--bg);
+}
+
+.btn-solid,
+.btn-ghost {
+  flex: 1 1 auto;
+  min-height: 48px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+}
+
+.btn-solid {
+  border: none;
+  background: var(--blue-btn);
+  color: var(--text);
+  box-shadow: 0 5px 18px rgba(33,102,184,0.4);
+}
+
+.btn-solid:hover:not([disabled]) { background: #2f7ad4; }
+.btn-solid:active:not([disabled]) { transform: scale(0.98); }
+
+.btn-solid[disabled] { opacity: 0.65; cursor: progress; box-shadow: none; }
+
+.btn-ghost {
+  flex: 0 0 auto;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.35);
+  color: var(--text);
+}
+
+.btn-ghost:hover { border-color: #ffffff; background: rgba(255,255,255,0.07); }
+
+/* ===================== FOCUS ===================== */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* The real controls are visually hidden, so the focus ring has to land on the
+   thing the customer can actually see. */
+.vis-hidden:focus-visible + .choice,
+.vis-hidden:focus-visible + .check,
+.vis-hidden:focus-visible + .btn-file {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* ===================== REDUCED MOTION ===================== */
+@media (prefers-reduced-motion: reduce) {
+  .quote-backdrop,
+  .quote-panel { animation: none; }
+
+  .btn-quote,
+  .btn-solid,
+  .btn-ghost,
+  .btn-file,
+  .choice,
+  .quote-x { transition: none; }
+
+  .btn-quote:active,
+  .btn-solid:active { transform: none; }
+}
+
+/* ===================== LARGER SCREENS ===================== */
+@media (min-width: 620px) {
+  .hero-content { padding: 40px 16px 44px; gap: 28px; }
+
+  .quote-body { padding: 24px 22px 6px; }
+  .quote-foot { padding: 16px 22px; }
+  .quote-head { padding: 13px 13px 13px 22px; }
+}
