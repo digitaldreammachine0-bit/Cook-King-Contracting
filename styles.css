@@ -18,8 +18,26 @@
 
 html { -webkit-text-size-adjust: 100%; background: var(--bg); }
 
+/* The page is one vertical column: hero, footer, footer bottom bar.
+
+   The column is exactly one screen tall. The hero takes whatever height the
+   two footer strips do not need, so the phone number and the copyright line
+   are both on screen the moment the page loads. Nobody has to scroll to find
+   them. This holds on every size, phone included.
+
+   dvh, not vh: on a phone vh stays fixed at the tallest the viewport ever
+   gets, so the layout jumps when the address bar slides away. dvh follows the
+   viewport as it really is. The plain vh line above it is the fallback for
+   older browsers.
+
+   #bg-canvas is position:absolute, so it is not a column item and this does
+   not touch it. */
 body {
   position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
   background: var(--bg);
   color: var(--text);
@@ -67,12 +85,20 @@ img { display: block; max-width: 100%; }
 /* ===================== HERO ===================== */
 .hero {
   position: relative;
-  /* The hero IS the page now, so it fills the screen. dvh, not vh: on a phone
-     vh stays fixed at the tallest the viewport ever gets, so when the address
-     bar slides away the layout jumps. dvh follows the viewport as it really is.
-     The plain vh line above is the fallback for older browsers. */
-  min-height: 100vh;
-  min-height: 100dvh;
+  /* The hero takes every pixel the two footer strips leave behind. It is the
+     only part of the column that grows, so the footers keep their real height
+     and the hero absorbs the rest.
+
+     It never shrinks below its own content. min-content reads that floor off
+     the logo and the button themselves, so the two can never collide on a
+     short window and there is no magic pixel number to rot. The px line above
+     it is the fallback for older browsers.
+
+     .stage-hero is inset:0 inside this box, so the 3D viewport follows this
+     height on its own. scene.js measures the element every frame. */
+  flex: 1 1 auto;
+  min-height: 300px;
+  min-height: min-content;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -167,6 +193,8 @@ img { display: block; max-width: 100%; }
 .footer {
   position: relative;
   z-index: 6;
+  /* Keeps its real height in the page column. Only the hero gives ground. */
+  flex: 0 0 auto;
   background: var(--bg);
   padding: 18px 18px 20px;
   display: flex;
@@ -273,6 +301,7 @@ img { display: block; max-width: 100%; }
 .footer-bottom {
   position: relative;
   z-index: 6;
+  flex: 0 0 auto;
   background: var(--bg-bottom);
   padding: 9px 18px 11px;
   text-align: center;

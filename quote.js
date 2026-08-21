@@ -9,32 +9,43 @@
   'use strict';
 
   /* =========================================================================
-     THE ONE LINE TO CHANGE WHEN SENDING GOES LIVE
+     WHERE THE QUOTE GOES
      -------------------------------------------------------------------------
-     Paste the Google Apps Script web app URL between the quotes.
-     Step by step instructions are in SENDING-SETUP.md, next to this file.
+     The Send button builds a mailto: link and hands it to the customer's own
+     email app. The draft opens addressed to Russell with every answer already
+     written in. Nothing is posted to a server, so there is no service to
+     switch on and nothing to keep running.
 
-     While this is empty the Send button explains that sending is not switched
-     on yet and shows the phone number instead. It never fails quietly.
-
-     To move to a different service later, replace this URL and, if the new
-     service wants a different shape of data, edit buildPayload() below.
-     Nothing else in this file needs to change.
+     This is the only place the address appears. Change it here to send the
+     quotes somewhere else.
      ========================================================================= */
-  var QUOTE_ENDPOINT = '';
+  var QUOTE_EMAIL = 'russrestores24.7@gmail.com';
+
+  /* ---- how long the link may get ------------------------------------------
+     Some Windows mail handlers refuse a mailto: link once the whole URL runs
+     past about 2000 characters. The cap below sits under that with room to
+     spare.
+
+     The note is free text, so it is the one answer that can run away. When the
+     link is too long the note is cut back and marked, and every other answer
+     survives whole. If the link is still too long after that, the Send button
+     shows the phone number instead of opening a broken draft.
+     ---------------------------------------------------------------------- */
+  var MAX_MAILTO_CHARS = 1900;
+  var NOTE_CUT_MARK = ' [...]';
 
   /* ---- business contact, used by the popup header and every fallback ---- */
   var PHONE_DISPLAY = '480-414-6504';
 
   /* ---- photo limits -------------------------------------------------------
-     Google publishes no size limit for data arriving at an Apps Script web
-     app. The documented 50 MB figure is for calls the script makes OUT, not
-     for the request coming IN. So these caps are deliberately conservative and
-     have not been tested at the breaking point.
+     A mailto: link cannot carry a file, so no picture ever leaves this page.
+     The photo step is here to count the pictures. The email then asks the
+     customer to attach them in their own email app.
 
-     Every picture is shrunk in the browser before it is sent, which is what
-     actually keeps the request small. A modern phone photo lands around
-     200 KB to 500 KB after this treatment instead of 3 MB to 6 MB.
+     Each picture is still opened and shrunk here. That is what stops four
+     phone photos from filling the browser's memory while the form is open.
+     Note that the size shown beside each name is the size after that shrink,
+     not the size of the file the customer will attach.
      ---------------------------------------------------------------------- */
   var MAX_PHOTOS = 4;
   var MAX_EDGE = 1600;            // longest side in pixels after shrinking
@@ -68,10 +79,9 @@
   var screens = [$('quote-screen-1'), $('quote-screen-2'), $('quote-screen-3'), $('quote-screen-4')];
 
   /* ---- state ---- */
-  var endpoint = QUOTE_ENDPOINT;
-  var step = 0;            // 0, 1, 2 are the three questions screens. 3 is "sent".
-  var sending = false;
+  var step = 0;            // 0, 1, 2 are the three question screens. 3 is the last one.
   var photos = [];         // { name, dataUrl, bytes }
+  var lastMailto = '';     // the link built by the last Send press
   var lastFocus = null;
   var saveTimer = 0;
 
@@ -135,14 +145,19 @@
      SAVING WHAT THEY TYPED
      Answers go to the browser's own storage as they type, so closing the popup
      by accident does not wipe the work. Photos are not saved: they are far too
-     big for that storage. Cleared only on a confirmed successful send.
+     big for that storage.
+
+     The answers are never cleared. Opening the mail app is not the same as the
+     email being sent, so there is no moment this page can call a success. The
+     customer can still close the draft, and the mail app may not open at all.
+     Wiping their answers then would destroy work they still need.
      ========================================================================= */
 
   var TEXT_FIELDS = ['q-date', 'q-hour', 'q-minute', 'q-meridiem', 'q-note',
                      'q-name', 'q-phone', 'q-address', 'q-email'];
 
   function collect() {
-    var out = { service: '', copy: $('q-copy').checked };
+    var out = { service: '' };
     var picked = document.querySelector('input[name="service"]:checked');
     if (picked !== null) out.service = picked.value;
     for (var i = 0; i < TEXT_FIELDS.length; i++) {
@@ -178,11 +193,6 @@
       var r = document.querySelector('input[name="service"][value="' + d.service + '"]');
       if (r !== null) r.checked = true;
     }
-    $('q-copy').checked = d.copy === true;
-  }
-
-  function forget() {
-    try { localStorage.removeItem(STORE_KEY); } catch (err) { /* nothing to do */ }
   }
 
   /* =========================================================================
@@ -282,10 +292,6 @@
     var mail = $('q-email').value.trim();
     if (mail !== '' && !emailLooksReal(mail)) {
       showError('err-email', 'q-email', 'Check this address. It needs an @ and a dot.');
-      if (first === null) first = $('q-email');
-      ok = false;
-    } else if (mail === '' && $('q-copy').checked) {
-      showError('err-email', 'q-email', 'Add your email, or untick the copy box below.');
       if (first === null) first = $('q-email');
       ok = false;
     }
@@ -433,19 +439,17 @@
     addRow('Address or area', d['q-address'].trim());
     addRow('Email', d['q-email'].trim());
     addRow('Photos', photos.length === 0 ? 'None' : String(photos.length));
-    addRow('Copy to you', d.copy && d['q-email'].trim() !== '' ? 'Yes' : 'No');
   }
 
   /* =========================================================================
-     WHAT GETS SENT
-     One function builds the whole parcel. Swapping to another service later
-     means changing this and the URL at the top, and nothing else.
+     WHAT GOES IN THE EMAIL
+     One function collects the answers. One writes the subject, one writes the
+     body, and one wraps both into the mailto: link.
      ========================================================================= */
 
   function buildPayload() {
     var d = collect();
     return {
-      source: 'cookking-website',
       submittedAt: stampNow(),           // 12 hour, e.g. 8/19/2026, 3:24 PM
       service: d.service,
       date: d['q-date'],
@@ -456,29 +460,93 @@
       phone: d['q-phone'].trim(),
       address: d['q-address'].trim(),
       email: d['q-email'].trim(),
-      sendCopy: d.copy === true && d['q-email'].trim() !== '',
-      photos: photos.map(function (p) { return { name: p.name, dataUrl: p.dataUrl }; })
+      photoNames: photos.map(function (p) { return p.name; })
     };
   }
 
-  function sendPayload(payload) {
-    /* text/plain keeps this a simple cross-origin request. Anything else makes
-       the browser send a preflight check first, which Apps Script does not
-       answer, and the send would fail before it ever left. */
-    return fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload),
-      redirect: 'follow'
-    }).then(function (res) {
-      if (!res.ok) throw new Error('The server answered ' + res.status + '.');
-      return res.json();
-    }).then(function (out) {
-      if (out === null || out.ok !== true) {
-        throw new Error(out && out.error ? String(out.error) : 'The request was not accepted.');
-      }
-      return out;
-    });
+  /* Russell reads this in a crowded inbox, so the subject carries the job and
+     the customer, in that order. */
+  function emailSubject(p) {
+    var what = p.service === '' ? 'Quote' : p.service;
+    var who = p.name === '' ? 'Website visitor' : p.name;
+    return 'Quote request - ' + what + ' - ' + who;
+  }
+
+  /* The pictures cannot ride along on a mailto: link. This line goes near the
+     top of the body, in the customer's own voice, so the reminder to attach
+     them is one of the first things they read. */
+  function photoLine(n) {
+    if (n === 1) return 'I have 1 photo of the job. I am attaching it to this email now.';
+    return 'I have ' + n + ' photos of the job. I am attaching them to this email now.';
+  }
+
+  /* Plain labelled lines, not JSON. Russell reads this on a phone. The day and
+     the time come from the same two helpers the review screen uses, so the
+     email and the screen always agree, and both stay 12 hour. */
+  function emailBody(p, note) {
+    var lines = [];
+    lines.push('Hello Russell,');
+    lines.push('');
+    lines.push('I would like a quote. My details are below.');
+    lines.push('');
+
+    if (p.photoNames.length > 0) {
+      lines.push(photoLine(p.photoNames.length));
+      lines.push('');
+    }
+
+    if (p.service !== '')  lines.push('Service: ' + p.service);
+    if (p.dayLabel !== '') lines.push('Day: ' + p.dayLabel);
+    if (p.time !== '')     lines.push('Time: ' + p.time);
+    lines.push('Name: ' + p.name);
+    lines.push('Phone: ' + prettyPhone(p.phone));
+    lines.push('Address or area: ' + p.address);
+    if (p.email !== '')    lines.push('Email: ' + p.email);
+    lines.push('Photos: ' + (p.photoNames.length === 0 ? 'None' : String(p.photoNames.length)));
+
+    if (note !== '') {
+      lines.push('');
+      lines.push('About the job:');
+      // The note comes from a textarea, so it can hold its own line breaks.
+      lines.push(note.replace(/\r\n/g, '\n').replace(/\n/g, '\r\n'));
+    }
+
+    lines.push('');
+    lines.push('Filled in on the Cook King Contractor website on ' + p.submittedAt + '.');
+    return lines.join('\r\n');
+  }
+
+  /* Both halves are encoded. A line break becomes %0D%0A, which is what a
+     mailto body needs, so the body is built with \r\n and the encoder does the
+     rest. */
+  function linkFor(p, note) {
+    return 'mailto:' + QUOTE_EMAIL +
+           '?subject=' + encodeURIComponent(emailSubject(p)) +
+           '&body=' + encodeURIComponent(emailBody(p, note));
+  }
+
+  /* Build the link, then cut the note back until the whole thing fits.
+
+     Encoding turns some characters into three, so the overshoot is measured
+     again after every cut rather than worked out once. The loop is bounded so
+     an odd note can never hang the button. A link that is still too long once
+     the note is gone is refused by doSend(), not opened. */
+  function buildMailto() {
+    var p = buildPayload();
+    var url = linkFor(p, p.note);
+    if (url.length <= MAX_MAILTO_CHARS) return url;
+
+    var note = p.note;
+    var guard = 0;
+    while (note !== '' && url.length > MAX_MAILTO_CHARS && guard < 300) {
+      var over = url.length - MAX_MAILTO_CHARS;
+      var cut = Math.ceil(over / 3);
+      if (cut < 8) cut = 8;
+      note = note.slice(0, Math.max(0, note.length - cut)).replace(/\s+$/, '');
+      url = linkFor(p, note + NOTE_CUT_MARK);
+      guard++;
+    }
+    return url;
   }
 
   /* =========================================================================
@@ -494,14 +562,14 @@
     stepLabel.hidden = onSent;
     if (!onSent) stepLabel.textContent = 'Step ' + (step + 1) + ' of 3';
 
-    backBtn.hidden = onSent || step === 0 || sending;
+    backBtn.hidden = onSent || step === 0;
     nextBtn.hidden = onReview || onSent;
     sendBtn.hidden = !onReview;
     doneBtn.hidden = !onSent;
 
-    backBtn.disabled = sending;
-    sendBtn.disabled = sending;
-    sendBtn.textContent = sending ? 'Sending...' : 'Send my request';
+    /* The last screen keeps the phone number in reach. The mail app may not
+       have opened at all, and the customer needs a way through either way. */
+    if (fallback !== null && onSent) fallback.hidden = false;
 
     if (onReview) drawReview();
     body.scrollTop = 0;
@@ -519,7 +587,7 @@
   }
 
   /* =========================================================================
-     SENDING, AND EVERY WAY IT CAN GO
+     HANDING THE DRAFT OVER
      ========================================================================= */
 
   function failWith(message) {
@@ -530,32 +598,27 @@
   }
 
   function doSend() {
-    if (sending) return;
-
     sendError.hidden = true;
     if (fallback !== null) fallback.hidden = true;
 
-    if (endpoint === '') {
-      failWith('Sending is not switched on for this site yet. Call ' + PHONE_DISPLAY +
+    var url = buildMailto();
+
+    /* The note has already been cut back as far as it goes. A link still over
+       the cap means one of the other answers is enormous. Opening it would
+       hand the mail app a draft it may mangle, so it is not opened at all. */
+    if (url.length > MAX_MAILTO_CHARS) {
+      failWith('Your answers are too long to hand to your email app. Call ' + PHONE_DISPLAY +
                ' and Russell will take these details over the phone.');
       return;
     }
 
-    sending = true;
-    paint();
+    lastMailto = url;
+    window.location.href = url;
 
-    sendPayload(buildPayload()).then(function () {
-      sending = false;
-      forget();                      // only ever cleared on a confirmed success
-      photos = [];
-      drawPhotoList();
-      goTo(3);
-    }).catch(function (err) {
-      sending = false;
-      paint();
-      failWith('That did not go through. ' + (err && err.message ? err.message : '') +
-               ' Your answers are still here, so you can try again.');
-    });
+    /* The answers and the photo list both stay put. The mail app opening is
+       not the same as the email being sent. The customer can still close the
+       draft, and nothing here would survive that if it were cleared. */
+    goTo(3);
   }
 
   /* =========================================================================
@@ -617,7 +680,6 @@
   }
 
   function close() {
-    if (sending) return;                 // never yank it away mid send
     backdrop.hidden = true;
     setOutsideInert(false);
     document.body.style.overflow = '';
@@ -661,10 +723,15 @@
   /* Exposed for verification steps only, the same way scene.js exposes
      window.__cookking. Nothing on the page reads this. */
   window.__quote = {
-    setEndpoint: function (u) { endpoint = u; },
-    getEndpoint: function () { return endpoint; },
     payload: buildPayload,
+    mailto: buildMailto,
+    lastMailto: function () { return lastMailto; },
     photoCount: function () { return photos.length; },
-    limits: { MAX_PHOTOS: MAX_PHOTOS, MAX_EDGE: MAX_EDGE, MAX_TOTAL_CHARS: MAX_TOTAL_CHARS }
+    limits: {
+      MAX_PHOTOS: MAX_PHOTOS,
+      MAX_EDGE: MAX_EDGE,
+      MAX_TOTAL_CHARS: MAX_TOTAL_CHARS,
+      MAX_MAILTO_CHARS: MAX_MAILTO_CHARS
+    }
   };
 })();

@@ -195,24 +195,11 @@
           <div class="field">
             <span class="label" id="photo-label">Photos of the job <span class="opt">Optional</span></span>
             <!-- The limit is stated before they pick, not after. -->
-            <p class="hint" id="photo-hint">Up to 4 photos. Big pictures are shrunk on your phone before they are sent, so this works on a slow connection.</p>
+            <p class="hint" id="photo-hint">Up to 4 photos. Choosing them here tells Russell how many are coming. You attach the pictures yourself in your email app.</p>
             <input type="file" id="q-photos" class="vis-hidden" accept="image/*" multiple aria-describedby="photo-hint err-photos">
             <label class="btn-file" for="q-photos">Choose photos</label>
             <ul class="photo-list" id="photo-list"></ul>
             <p class="err" id="err-photos" hidden></p>
-          </div>
-
-          <div class="field">
-            <div class="check-row">
-              <input type="checkbox" id="q-copy" class="vis-hidden">
-              <label class="check" for="q-copy">
-                <span class="check-box" aria-hidden="true"></span>
-                <span class="check-text">
-                  Send me a copy
-                  <span class="check-note">Your email address is needed for this.</span>
-                </span>
-              </label>
-            </div>
           </div>
 
         </div>
@@ -224,14 +211,14 @@
           <dl class="review" id="quote-review"></dl>
 
           <p class="quote-handoff" id="quote-handoff">
-            This goes straight to Russell. He calls you back to confirm the price.
+            Send opens your email app with all of this filled in. You press send in there. Russell calls you back to confirm the price.
           </p>
         </div>
 
         <!-- ---------- SCREEN 4: sent ---------- -->
         <div class="quote-screen" id="quote-screen-4" hidden>
-          <p class="quote-lead">Sent. Russell has your request.</p>
-          <p class="quote-handoff" id="quote-sent-note">He will call you back to confirm the price and the time.</p>
+          <p class="quote-lead">Your email app should be open now.</p>
+          <p class="quote-handoff" id="quote-sent-note">Your request is not sent yet. Press send in your email app to finish. Then Russell calls you back to confirm the price and the time.</p>
         </div>
 
         <p class="send-error" id="quote-send-error" role="alert" hidden></p>
