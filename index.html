@@ -18,11 +18,21 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <!--
+    The 3D engine is served from this site's own vendor/ folder on purpose.
+    It used to load from a public CDN. Blockers and strict tracking settings
+    stopped that request for real visitors, mostly on Microsoft Edge.
+    When the engine failed to load, the page dropped to the fallback photo
+    with no warning. Serving it ourselves removes that failure.
+    The files in vendor/three/ are three.js version 0.185.1.
+    The core build and the addons must stay on the same version.
+    If you upgrade one, upgrade the whole vendor/three/ folder.
+  -->
   <script type="importmap">
   {
     "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+      "three": "./vendor/three/build/three.module.js",
+      "three/addons/": "./vendor/three/examples/jsm/"
     }
   }
   </script>
