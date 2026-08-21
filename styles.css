@@ -216,6 +216,54 @@ img { display: block; max-width: 100%; }
 .footer-social a { color: var(--text); display: flex; }
 .footer-social svg { width: 25px; height: 25px; }
 
+/* ---- footer music player ----
+   Sits in the same row as the social marks so the bar keeps its height. The
+   circle-and-glyph shape matches those marks on purpose. */
+.footer-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--rule);
+  align-self: center;
+}
+
+.footer-play {
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  line-height: 0;
+  position: relative;
+}
+
+/* A 44px tap target without changing how big the mark reads. The links next to
+   it get theirs from the .footer a::after rule, which cannot reach a button. */
+.footer-play::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+}
+
+.footer-play svg { width: 25px; height: 25px; display: block; }
+.footer-play .icon-pause { display: none; }
+.footer-play[aria-pressed="true"] .icon-play { display: none; }
+.footer-play[aria-pressed="true"] .icon-pause { display: block; }
+
+.footer-play:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
 .footer-handle {
   color: var(--text-dim);
   font-size: 0.8rem;

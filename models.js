@@ -80,6 +80,9 @@ export function makeBox() {
 export function makeWrench() {
   const outer = new Group();
   const inner = new Group();
+  /* Tag it so the hero can find these again and swap in the real model.
+     The tag goes on the group that leaves this function, not the inner one. */
+  outer.userData.kind = 'wrench';
 
   inner.add(new Mesh(GEO.wrench, MAT.steel));
 
@@ -98,6 +101,8 @@ export function makeWrench() {
 
 export function makeBottle() {
   const g = new Group();
+  /* Tag it so the hero can find these again and swap in the real model. */
+  g.userData.kind = 'bottle';
 
   const body = new Mesh(GEO.bottleBody, MAT.plastic);
   body.position.y = -0.15;
@@ -149,11 +154,11 @@ export const BUILDERS = [makeBox, makeWrench, makeBottle, makeHammer];
 /* ---------------------------------------------------------------
    Supplied models.
 
-   Every other shape here is built from primitives and costs nothing
-   to download. These two are real 3D files the owner provided, and
-   they are heavy enough that the page must not wait on them. So the
-   page draws the simple shapes immediately and quietly replaces them
-   once the real ones land. If a download fails, the simple shape just
+   The four shapes above are built from primitives and cost nothing to
+   download. The owner supplied a real 3D file for each one, and those
+   are heavy enough that the page must not wait on them. So the page
+   draws the simple shapes immediately and quietly replaces them once
+   the real ones land. If a download fails, the simple shape just
    stays. Nothing breaks and nothing shifts.
    --------------------------------------------------------------- */
 
@@ -288,4 +293,95 @@ export function loadBoxModels() {
     });
 
   return boxPromise;
+}
+
+/* ---- wrench: one OBJ, about 81 KB ----
+
+   An adjustable wrench in four parts: body, sliding jaw, worm screw and its
+   pin. The file names one material and no .mtl was supplied, so there is no
+   colour information to honour and every part is painted steel. OBJLoader
+   only reads materials when an MTLLoader is handed to it, so the missing
+   mtllib line is never chased and never 404s. */
+const WRENCH_FILE = 'assets/Wrench_OBJ.obj';
+
+/* The primitive wrench measures 2.748 world units, ring end to jaw end.
+   Matching it means the swap does not change how big the object reads. */
+const WRENCH_LENGTH = 2.75;
+
+let wrenchPromise = null;
+
+export function loadWrenchModel() {
+  if (wrenchPromise !== null) return wrenchPromise;
+
+  wrenchPromise = import('three/addons/loaders/OBJLoader.js')
+    .then(({ OBJLoader }) => new Promise((resolve, reject) => {
+      new OBJLoader().load(WRENCH_FILE, resolve, undefined, reject);
+    }))
+    .then((root) => {
+      root.traverse((node) => { if (node.isMesh) node.material = MAT.steel; });
+      /* Blender exported it lying flat, thin along y. The primitive it replaces
+         is extruded along z, so it is thin along z. Standing it up puts the two
+         on the same axis. */
+      return normalise(root, WRENCH_LENGTH, 'wrench', true);
+    })
+    .catch((err) => {
+      console.warn('Wrench model did not load. Keeping the built-in one.', err);
+      return null;
+    });
+
+  return wrenchPromise;
+}
+
+/* ---- spray bottle: one OBJ, about 1.45 MB ----
+
+   The owner supplied this as Spray+Bottle.obj. A plus sign in a URL path
+   decodes to a space on some servers, which turns the request into a 404.
+   Renamed once on disk instead of escaped at every call site. */
+const BOTTLE_FILE = 'assets/spray-bottle.obj';
+
+/* The primitive bottle stands 1.535 world units tall. */
+const BOTTLE_LENGTH = 1.5;
+
+/* The export carries one material for all five parts, so left alone the whole
+   bottle comes out a single colour. The primitive it replaces is a blue plastic
+   body with a steel head, and that two-tone read is worth keeping. The exporter
+   did leave the parts as separate named meshes, so each one is painted by name.
+
+   Spray_Mesh is the moulded shroud over the trigger, not a jet of mist, so it
+   is kept and grouped with the metal head. Names are matched in lower case, and
+   anything unrecognised falls back to plastic. A mesh with no material at all
+   would render flat white against a black page. */
+const BOTTLE_SKIN = new Map([
+  ['bottle_mesh', MAT.plastic],
+  ['middle_mesh', MAT.plastic],
+  ['handlemesh', MAT.steel],
+  ['nozzle_mesh', MAT.steel],
+  ['spray_mesh', MAT.steel],
+]);
+
+let bottlePromise = null;
+
+export function loadBottleModel() {
+  if (bottlePromise !== null) return bottlePromise;
+
+  bottlePromise = import('three/addons/loaders/OBJLoader.js')
+    .then(({ OBJLoader }) => new Promise((resolve, reject) => {
+      new OBJLoader().load(BOTTLE_FILE, resolve, undefined, reject);
+    }))
+    .then((root) => {
+      root.traverse((node) => {
+        if (!node.isMesh) return;
+        const name = (node.name || '').toLowerCase();
+        node.material = BOTTLE_SKIN.get(name) || MAT.plastic;
+      });
+      /* This one came out of 3ds Max standing on its base with y up, unlike the
+         hammer. Standing it up again would lay it on its side. */
+      return normalise(root, BOTTLE_LENGTH, 'bottle', false);
+    })
+    .catch((err) => {
+      console.warn('Spray bottle model did not load. Keeping the built-in one.', err);
+      return null;
+    });
+
+  return bottlePromise;
 }

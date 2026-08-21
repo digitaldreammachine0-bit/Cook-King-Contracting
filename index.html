@@ -66,6 +66,11 @@
         <a href="https://www.instagram.com/cleanercook24.7" target="_blank" rel="noopener noreferrer" aria-label="Cook King Contractor on Instagram">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="11"/><g fill="none" stroke="#000000" stroke-width="1.7"><rect x="6.6" y="6.6" width="10.8" height="10.8" rx="3.4"/><circle cx="12" cy="12" r="2.9"/></g><circle cx="15.9" cy="8.1" r="1.05" fill="#000000"/></svg>
         </a>
+        <span class="footer-divider" aria-hidden="true"></span>
+        <button type="button" class="footer-play" id="music-toggle" aria-pressed="false" aria-label="Play music" title="Play music">
+          <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="11"/><path d="M9.6 7.8l7 4.2-7 4.2z" fill="#000000"/></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="11"/><path d="M9 7.9h2.1v8.2H9zm3.9 0H15v8.2h-2.1z" fill="#000000"/></svg>
+        </button>
       </div>
       <p class="footer-handle">@cleanercook24.7</p>
     </div>
@@ -240,7 +245,12 @@
     </div>
   </div>
 
+  <!-- Footer music. preload is off until the page has finished loading, so the
+       2.5 MB track never competes with the logo or the 3D models. -->
+  <audio id="site-music" src="music/King-Cook.mp3" loop preload="none"></audio>
+
   <script type="module" src="scene.js"></script>
   <script defer src="quote.js"></script>
+  <script defer src="player.js"></script>
 </body>
 </html>

@@ -3,7 +3,9 @@ import {
   HemisphereLight, DirectionalLight, PMREMGenerator
 } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { BUILDERS, loadHammerModel, loadBoxModels } from './models.js';
+import {
+  BUILDERS, loadHammerModel, loadBoxModels, loadWrenchModel, loadBottleModel
+} from './models.js';
 
 const canvas = document.getElementById('bg-canvas');
 const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -160,6 +162,8 @@ function boot(renderer) {
 
   loadHammerModel().then((m) => swapIn('hammer', m));
   loadBoxModels().then((m) => swapIn('box', m));
+  loadWrenchModel().then((m) => swapIn('wrench', m));
+  loadBottleModel().then((m) => swapIn('bottle', m));
 
   /* ---------------- tilt input ---------------- */
   const tilt = { x: 0, y: 0, tx: 0, ty: 0 };
