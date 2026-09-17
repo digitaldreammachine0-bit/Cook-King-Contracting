@@ -189,6 +189,42 @@ img { display: block; max-width: 100%; }
 .btn-quote:hover  { background: #2f7ad4; }
 .btn-quote:active { transform: scale(0.97); }
 
+/* ===================== GOOGLE REVIEWS TAB ===================== */
+/* Pinned to the right edge near the top. Sits above the 3D canvas (5) and the
+   text layer (6), and below the quote popup (100). */
+.review-tab {
+  position: fixed;
+  top: 20px;
+  right: 0;
+  z-index: 7;
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 10px 8px 12px;
+  background: var(--bg-bottom);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-right: 0;
+  border-radius: 12px 0 0 12px;
+  color: var(--text);
+  text-decoration: none;
+  line-height: 1.15;
+  transition: background 0.2s ease;
+}
+
+.review-tab:hover { background: #1a1a1a; }
+
+.review-tab:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.review-tab-score { font-size: 0.86rem; font-weight: 800; white-space: nowrap; }
+.review-tab-star  { color: var(--focus); }
+.review-tab-name  { font-size: 0.68rem; font-weight: 600; color: var(--text-dim); }
+
 /* ===================== FOOTER ===================== */
 .footer {
   position: relative;
