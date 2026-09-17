@@ -1,0 +1,18 @@
+# Kept on disk, never published. The live site does not load any of these.
+
+# Source textures. The site uses the small copies in assets/MovingBox_Files/web/.
+assets/MovingBox_Files/Unreal_Export/*.tga
+
+# Job photos left over from the removed gallery section.
+Images/before1.jpg
+Images/before2.jpg
+Images/before3.jpg
+Images/after1.jpg
+Images/after2.jpg
+Images/after3.jpg
+
+# Dead code. Nothing loads it.
+gallery.js
+
+# Local test server only.
+serve.py
